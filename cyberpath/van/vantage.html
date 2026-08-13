@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vantage Point Security</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0F1A;
+    --surface:#111A2B;
+    --surface-2:#16223A;
+    --line: rgba(231,236,243,0.10);
+    --text:#E7ECF3;
+    --muted:#8B98AC;
+    --signal:#5FD9C4;
+    --signal-dim: rgba(95,217,196,0.14);
+    --amber:#F2A93B;
+    --amber-dim: rgba(242,169,59,0.14);
+    --risk:#E8604C;
+    --risk-dim: rgba(232,96,76,0.14);
+    --radius: 3px;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--ink); color:var(--text); font-family:var(--body); line-height:1.55; -webkit-font-smoothing:antialiased;}
+  a{color:inherit;} button{font-family:inherit; cursor:pointer;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 32px;}
+  @media (max-width:640px){ .wrap{padding:0 20px;} }
+  body::before{
+    content:""; position:fixed; inset:0;
+    background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:48px 48px; opacity:0.35; pointer-events:none; z-index:0;
+  }
+
+  /* NAV */
+  header{position:sticky; top:0; z-index:100; background:rgba(10,15,26,0.86); backdrop-filter:blur(10px); border-bottom:1px solid var(--line);}
+  nav{display:flex; align-items:center; justify-content:space-between; padding:18px 32px; max-width:1180px; margin:0 auto;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--display); font-weight:600; font-size:18px; cursor:pointer;}
+  .brand-mark{width:26px; height:26px; border:1.5px solid var(--signal); border-radius:2px; position:relative; flex-shrink:0;}
+  .brand-mark::before{content:""; position:absolute; inset:5px; background:var(--signal); opacity:0.85; animation:pulse-mark 2.4s ease-in-out infinite;}
+  @keyframes pulse-mark{0%,100%{opacity:0.85;} 50%{opacity:0.25;}}
+  .brand small{display:block; font-family:var(--mono); font-weight:400; font-size:10px; letter-spacing:0.14em; color:var(--muted); text-transform:uppercase; margin-top:1px;}
+  .navlinks{display:flex; align-items:center; gap:6px;}
+  .navlinks button{background:none; border:none; color:var(--muted); font-size:14px; font-weight:500; padding:9px 14px; border-radius:var(--radius); transition:color .15s, background .15s;}
+  .navlinks button:hover{color:var(--text); background:var(--surface-2);}
+  .navlinks button.active{color:var(--signal); background:var(--signal-dim);}
+  .login-btn{background:var(--signal); color:#06110D; font-weight:600; font-size:13.5px; padding:10px 18px; border-radius:var(--radius); border:none;}
+  .login-btn:hover{background:#7EE6D3;}
+  @media (max-width:920px){ .navlinks{display:none;} }
+
+  main{position:relative; z-index:1;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--signal); display:flex; align-items:center; gap:8px; margin-bottom:16px;}
+  .eyebrow::before{content:""; width:6px; height:6px; background:var(--signal); border-radius:1px; display:inline-block;}
+  h1,h2,h3,h4{font-family:var(--display); font-weight:600; letter-spacing:-0.01em;}
+  .badge-demo{display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10.5px; color:var(--amber); background:var(--amber-dim); border:1px solid rgba(242,169,59,0.3); padding:4px 9px; border-radius:2px; letter-spacing:0.06em;}
+  .badge-demo::before{content:"●"; font-size:8px;}
+
+  /* HERO */
+  .hero{padding:88px 0 64px;}
+  .hero-grid{display:grid; grid-template-columns:1.05fr 0.95fr; gap:56px; align-items:center;}
+  @media (max-width:920px){ .hero-grid{grid-template-columns:1fr;} }
+  .hero h1{font-size:clamp(34px,4.6vw,54px); line-height:1.08; margin-bottom:20px;}
+  .hero h1 .accent{color:var(--signal);}
+  .hero p.lead{font-size:17px; color:var(--muted); max-width:46ch; margin-bottom:32px;}
+  .hero-actions{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:44px;}
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:13px 22px; border-radius:var(--radius); font-size:14.5px; font-weight:600; border:1px solid transparent; transition:all .15s;}
+  .btn-primary{background:var(--signal); color:#06110D;} .btn-primary:hover{background:#7EE6D3;}
+  .btn-ghost{background:transparent; color:var(--text); border-color:var(--line);} .btn-ghost:hover{border-color:var(--signal); color:var(--signal);}
+  .btn-sm{padding:8px 14px; font-size:13px;}
+  .stats{display:flex; gap:36px; flex-wrap:wrap;}
+  .stat .num{font-family:var(--mono); font-size:26px; font-weight:500;}
+  .stat .label{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;}
+  .scan-panel{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:20px; position:relative; overflow:hidden;}
+  .scan-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .scan-head .dot{width:7px; height:7px; border-radius:50%; background:var(--signal); display:inline-block; margin-right:6px; animation:blink 1.6s infinite;}
+  @keyframes blink{0%,100%{opacity:1;} 50%{opacity:0.3;}}
+  .grid-cells{display:grid; grid-template-columns:repeat(10,1fr); gap:4px; position:relative;}
+  .cell{aspect-ratio:1; background:var(--surface-2); border-radius:2px; border:1px solid var(--line);}
+  .scanline{position:absolute; top:0; bottom:0; width:14%; background:linear-gradient(90deg, transparent, rgba(242,169,59,0.35), transparent); animation:sweep 4.5s linear infinite; pointer-events:none;}
+  @keyframes sweep{0%{left:-14%;} 100%{left:100%;}}
+  .scan-footer{margin-top:14px; display:flex; justify-content:space-between; font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .scan-footer .exposed{color:var(--risk);} .scan-footer .secured{color:var(--signal);}
+
+  .section-pad{padding:80px 0;} .section-head{max-width:640px; margin-bottom:48px;}
+  .section-head h2{font-size:clamp(26px,3.4vw,36px); margin-bottom:14px;} .section-head p{color:var(--muted); font-size:15.5px;}
+
+  .aware-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  @media (max-width:920px){ .aware-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:640px){ .aware-grid{grid-template-columns:1fr;} }
+  .aware-card{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:22px; cursor:pointer; transition:border-color .15s;}
+  .aware-card:hover{border-color:rgba(95,217,196,0.4);}
+  .aware-card .tag{font-family:var(--mono); font-size:10.5px; color:var(--amber); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px; display:block;}
+  .aware-card h3{font-size:17px; margin-bottom:8px;} .aware-card .short{color:var(--muted); font-size:14px;}
+  .aware-card .more{color:var(--muted); font-size:13.5px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line); display:none;}
+  .aware-card.open .more{display:block;}
+  .aware-card .toggle{font-family:var(--mono); font-size:11.5px; color:var(--signal); margin-top:12px; display:inline-block;}
+
+  .svc-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
+  @media (max-width:760px){ .svc-grid{grid-template-columns:1fr;} }
+  .svc-card{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:26px; display:flex; flex-direction:column; gap:14px;}
+  .svc-top{display:flex; justify-content:space-between; align-items:flex-start; gap:12px;}
+  .svc-code{font-family:var(--mono); font-size:11px; color:var(--signal); border:1px solid rgba(95,217,196,0.3); background:var(--signal-dim); padding:3px 8px; border-radius:2px; white-space:nowrap;}
+  .svc-card h3{font-size:19px;} .svc-card p{color:var(--muted); font-size:14.5px;}
+  .svc-meta{display:flex; gap:18px; font-family:var(--mono); font-size:11.5px; color:var(--muted); flex-wrap:wrap;}
+  .svc-meta span b{color:var(--text); font-weight:500;}
+  .svc-card .btn{align-self:flex-start; margin-top:4px;}
+
+  .apply-layout{display:grid; grid-template-columns:1fr 1.3fr; gap:48px;}
+  @media (max-width:880px){ .apply-layout{grid-template-columns:1fr;} }
+  .apply-side h2{font-size:28px; margin-bottom:14px;} .apply-side p{color:var(--muted); font-size:15px; margin-bottom:24px;}
+  .apply-side ul{list-style:none;}
+  .apply-side li{display:flex; gap:10px; font-size:14px; color:var(--muted); padding:10px 0; border-top:1px solid var(--line);}
+  .apply-side li:first-child{border-top:none;} .apply-side li::before{content:"—"; color:var(--signal); flex-shrink:0;}
+  form{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:32px;}
+  .field{margin-bottom:18px;}
+  .field label{display:block; font-size:12.5px; font-weight:500; color:var(--muted); margin-bottom:7px; text-transform:uppercase; letter-spacing:0.05em;}
+  .field input, .field select, .field textarea{width:100%; background:var(--ink); border:1px solid var(--line); color:var(--text); padding:12px 13px; border-radius:var(--radius); font-family:var(--body); font-size:14.5px; transition:border-color .15s;}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--signal);}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:520px){ .field-row{grid-template-columns:1fr;} }
+  textarea{resize:vertical; min-height:96px;}
+  .submit-row{display:flex; align-items:center; gap:14px; margin-top:6px;}
+  .form-note{font-size:12.5px; color:var(--muted);}
+  .success-box{display:none; background:var(--signal-dim); border:1px solid rgba(95,217,196,0.35); border-radius:6px; padding:22px; margin-top:20px; font-size:14.5px;}
+  .success-box.show{display:block;} .success-box .title{color:var(--signal); font-weight:600; font-family:var(--display); margin-bottom:6px;}
+
+  .login-wrap{display:flex; justify-content:center; padding-top:20px;}
+  .login-card{width:100%; max-width:400px; background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:34px;}
+  .login-card h2{font-size:22px; margin-bottom:6px;} .login-card p.sub{color:var(--muted); font-size:13.5px; margin-bottom:26px;}
+  .login-card .btn{width:100%; justify-content:center; margin-top:6px;}
+  .login-foot{display:flex; justify-content:space-between; margin-top:16px; font-size:12.5px;}
+  .login-foot a{color:var(--muted); text-decoration:none;} .login-foot a:hover{color:var(--signal);}
+  .demo-note{font-family:var(--mono); font-size:11px; color:var(--muted); text-align:center; margin-top:22px; border-top:1px solid var(--line); padding-top:16px;}
+
+  footer{border-top:1px solid var(--line); padding:40px 0; margin-top:40px; position:relative; z-index:1;}
+  .foot-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;}
+  .foot-row .brand{font-size:15px; cursor:default;}
+  footer .fine{color:var(--muted); font-size:12.5px;}
+
+  /* ================= APP SHELL (post-login) ================= */
+  #appShell{display:none;}
+  #appShell.active{display:block;}
+  .app-frame{display:grid; grid-template-columns:230px 1fr; min-height:calc(100vh - 68px);}
+  @media (max-width:800px){ .app-frame{grid-template-columns:1fr;} }
+  .sidebar{border-right:1px solid var(--line); padding:24px 14px; position:relative; z-index:1;}
+  @media (max-width:800px){ .sidebar{border-right:none; border-bottom:1px solid var(--line); display:flex; gap:4px; overflow-x:auto; padding:14px;} }
+  .sidebar .app-user{padding:8px 12px 20px; margin-bottom:8px; border-bottom:1px solid var(--line);}
+  @media (max-width:800px){ .sidebar .app-user{display:none;} }
+  .sidebar .app-user .name{font-family:var(--display); font-size:14.5px; font-weight:600;}
+  .sidebar .app-user .role{font-family:var(--mono); font-size:10.5px; color:var(--signal); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px;}
+  .sidenav button{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:none; border:none;
+    color:var(--muted); font-size:14px; padding:11px 12px; border-radius:var(--radius); margin-bottom:2px; white-space:nowrap;
+  }
+  .sidenav button .dot{width:5px; height:5px; background:var(--muted); border-radius:1px; flex-shrink:0;}
+  .sidenav button:hover{background:var(--surface-2); color:var(--text);}
+  .sidenav button.active{background:var(--signal-dim); color:var(--signal);}
+  .sidenav button.active .dot{background:var(--signal);}
+  .sidenav .signout{margin-top:18px; padding-top:14px; border-top:1px solid var(--line); color:var(--risk);}
+
+  .app-content{padding:36px 40px;}
+  @media (max-width:640px){ .app-content{padding:24px 20px;} }
+  .app-page{display:none;} .app-page.active{display:block;}
+  .app-page-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; gap:16px; flex-wrap:wrap;}
+  .app-page-head h2{font-size:24px;} .app-page-head p{color:var(--muted); font-size:14px; margin-top:4px;}
+
+  .kpi-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:28px;}
+  @media (max-width:900px){ .kpi-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:480px){ .kpi-grid{grid-template-columns:1fr;} }
+  .kpi-card{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:18px;}
+  .kpi-card .num{font-family:var(--mono); font-size:26px;} .kpi-card .num.risk{color:var(--risk);} .kpi-card .num.amber{color:var(--amber);} .kpi-card .num.signal{color:var(--signal);}
+  .kpi-card .label{color:var(--muted); font-size:12px; margin-top:4px;}
+
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:6px; margin-bottom:24px; overflow:hidden;}
+  .panel-head{display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--line);}
+  .panel-head h3{font-size:15px;}
+
+  .risk-bars{padding:20px;}
+  .risk-row{display:grid; grid-template-columns:80px 1fr 34px; align-items:center; gap:12px; margin-bottom:12px; font-family:var(--mono); font-size:12px;}
+  .risk-row:last-child{margin-bottom:0;}
+  .risk-track{height:8px; background:var(--surface-2); border-radius:4px; overflow:hidden;}
+  .risk-fill{height:100%; border-radius:4px;}
+
+  table{width:100%; border-collapse:collapse;}
+  thead th{text-align:left; font-family:var(--mono); font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; padding:12px 20px; border-bottom:1px solid var(--line);}
+  tbody td{padding:14px 20px; font-size:13.5px; border-bottom:1px solid var(--line);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--surface-2);}
+  .pill{display:inline-flex; align-items:center; gap:5px; font-family:var(--mono); font-size:10.5px; padding:4px 9px; border-radius:2px; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap;}
+  .pill::before{content:"●"; font-size:7px;}
+  .pill.ok{background:var(--signal-dim); color:var(--signal);}
+  .pill.warn{background:var(--amber-dim); color:var(--amber);}
+  .pill.bad{background:var(--risk-dim); color:var(--risk);}
+  .pill.muted{background:var(--surface-2); color:var(--muted);}
+  .toolbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .toolbar input, .toolbar select{background:var(--ink); border:1px solid var(--line); color:var(--text); padding:9px 12px; border-radius:var(--radius); font-size:13px;}
+
+  .report-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+  @media (max-width:760px){ .report-grid{grid-template-columns:1fr;} }
+  .report-card{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:20px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px;}
+  .report-card h4{font-size:15px; margin-bottom:6px;}
+  .report-card .meta{font-family:var(--mono); font-size:11px; color:var(--muted);}
+
+  /* modal */
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(6,10,18,0.7); backdrop-filter:blur(3px); z-index:200; align-items:center; justify-content:center; padding:20px;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--surface); border:1px solid var(--line); border-radius:6px; width:100%; max-width:480px; padding:28px; max-height:88vh; overflow:auto;}
+  .modal-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
+  .modal-head h3{font-size:17px;}
+  .modal-close{background:none; border:1px solid var(--line); color:var(--muted); width:28px; height:28px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center;}
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="brand" onclick="goPublic('home')">
+      <div class="brand-mark"></div>
+      <div>VANTAGE POINT<small>Offensive Security</small></div>
+    </div>
+    <div class="navlinks" id="publicNav">
+      <button data-target="home" class="active">Home</button>
+      <button data-target="services">Services</button>
+      <button data-target="awareness">Awareness</button>
+      <button data-target="apply">Apply</button>
+    </div>
+    <button class="login-btn" onclick="mockLogin()">Client Login</button>
+  </nav>
+</header>
+
+<!-- ============= PUBLIC SITE ============= -->
+<main class="wrap" id="publicSite">
+
+  <section id="home" class="view active">
+    <div class="hero">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">Penetration Testing &amp; Security Awareness</div>
+          <h1>See what an attacker<br>would see — <span class="accent">before they do.</span></h1>
+          <p class="lead">Vantage Point runs real-world offensive assessments against your networks, applications, and people, then hands you a plan your team can actually act on.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" onclick="goPublic('services')">Explore services</button>
+            <button class="btn btn-ghost" onclick="goPublic('apply')">Request an assessment</button>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="num">340+</div><div class="label">Assessments delivered</div></div>
+            <div class="stat"><div class="num">28</div><div class="label">Industries served</div></div>
+            <div class="stat"><div class="num">96%</div><div class="label">Findings remediated on retest</div></div>
+          </div>
+        </div>
+        <div class="scan-panel">
+          <div class="scan-head"><span><span class="dot"></span>LIVE SCAN — asset-inventory.local</span><span>60 assets</span></div>
+          <div class="grid-cells" id="cellGrid"><div class="scanline"></div></div>
+          <div class="scan-footer"><span>Sweep interval: continuous</span><span><span class="exposed">● exposed</span> &nbsp; <span class="secured">● secured</span></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-pad" style="padding-top:0;">
+      <div class="section-head">
+        <div class="eyebrow">Why teams work with us</div>
+        <h2>Security testing that changes what you do on Monday.</h2>
+        <p>A pentest report full of scores nobody reads doesn't reduce your risk. Ours are written for the engineer who has to fix the finding and the executive who has to fund the fix.</p>
+      </div>
+      <div class="aware-grid">
+        <div class="aware-card" style="cursor:default;"><span class="tag">Method</span><h3>Manual-first testing</h3><p class="short">Automated scanners open the door; our consultants do the actual break-in, so findings reflect real exploitability.</p></div>
+        <div class="aware-card" style="cursor:default;"><span class="tag">Reporting</span><h3>Fix-ready findings</h3><p class="short">Every finding ships with reproduction steps, business impact, and a remediation path — no jargon walls.</p></div>
+        <div class="aware-card" style="cursor:default;"><span class="tag">Follow-through</span><h3>Free retest window</h3><p class="short">Patch and re-test within 60 days of report delivery at no extra cost.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="awareness" class="view">
+    <div class="section-pad">
+      <div class="section-head">
+        <div class="eyebrow">Security Awareness</div>
+        <h2>The basics that stop most incidents.</h2>
+        <p>Most breaches don't start with a zero-day — they start with a click, a reused password, or an unlocked laptop.</p>
+      </div>
+      <div class="aware-grid" id="awareGrid"></div>
+    </div>
+  </section>
+
+  <section id="services" class="view">
+    <div class="section-pad">
+      <div class="section-head">
+        <div class="eyebrow">Our Services</div>
+        <h2>Pick the engagement that matches your risk.</h2>
+        <p>Each engagement is scoped with you up front — nothing runs against your environment outside the agreed window and rules of engagement.</p>
+      </div>
+      <div class="svc-grid" id="svcGrid"></div>
+    </div>
+  </section>
+
+  <section id="apply" class="view">
+    <div class="section-pad">
+      <div class="apply-layout">
+        <div class="apply-side">
+          <div class="eyebrow">Get started</div>
+          <h2>Request an assessment</h2>
+          <p>Tell us a little about your environment. A lead consultant will follow up within one business day to scope the engagement.</p>
+          <ul>
+            <li>All engagements are covered by a signed rules-of-engagement agreement before any testing begins.</li>
+            <li>Scoping calls are free and carry no obligation.</li>
+            <li>NDA available on request, prior to any details being shared.</li>
+          </ul>
+        </div>
+        <div>
+          <form id="applyForm">
+            <div class="field-row">
+              <div class="field"><label>Full name</label><input type="text" required placeholder="Jordan Micah"></div>
+              <div class="field"><label>Work email</label><input id="femail" type="email" required placeholder="jordan@company.com"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Company</label><input type="text" required placeholder="Company name"></div>
+              <div class="field"><label>Company size</label><select><option>1–10</option><option>11–50</option><option>51–200</option><option>201–1000</option><option>1000+</option></select></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Service of interest</label><select id="fservice"></select></div>
+              <div class="field"><label>Preferred timeline</label><select><option>As soon as possible</option><option>Within 30 days</option><option>Within this quarter</option><option>Just exploring</option></select></div>
+            </div>
+            <div class="field"><label>Scope details</label><textarea placeholder="Number of IPs/URLs in scope, compliance drivers, etc."></textarea></div>
+            <div class="submit-row"><button type="submit" class="btn btn-primary">Submit request</button><span class="form-note">We'll respond within 1 business day.</span></div>
+          </form>
+          <div class="success-box" id="successBox"><div class="title">Request received</div><div>Thanks — a lead consultant will reach out within one business day.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============= MOCK LOGIN ============= -->
+<main class="wrap" id="loginSite" style="display:none;">
+  <div class="section-pad">
+    <div class="login-wrap">
+      <div class="login-card">
+        <h2>Client portal</h2>
+        <p class="sub">Sign in to view findings, schedules, and reports.</p>
+        <form id="loginForm">
+          <div class="field"><label>Email</label><input id="lemail" type="email" required placeholder="you@company.com"></div>
+          <div class="field"><label>Password</label><input type="password" required placeholder="••••••••"></div>
+          <button type="submit" class="btn btn-primary">Sign in</button>
+        </form>
+        <div class="login-foot"><a href="#" onclick="return false;">Forgot password</a><a href="#" onclick="return false;">Request access</a></div>
+        <div class="demo-note">PROTOTYPE — static demo, no backend connected yet.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ============= APP SHELL (post "login") ============= -->
+<div id="appShell">
+  <div class="app-frame">
+    <aside class="sidebar">
+      <div class="app-user">
+        <div class="name" id="appUserName">Jordan Micah</div>
+        <div class="role">Client · Acme Co</div>
+      </div>
+      <div class="sidenav" id="appNav">
+        <button data-page="dashboard" class="active"><span class="dot"></span>Dashboard</button>
+        <button data-page="assets"><span class="dot"></span>Assets</button>
+        <button data-page="scans"><span class="dot"></span>Scans</button>
+        <button data-page="findings"><span class="dot"></span>Findings</button>
+        <button data-page="reports"><span class="dot"></span>Reports</button>
+        <button data-page="settings"><span class="dot"></span>Settings</button>
+        <button class="signout" onclick="mockLogout()"><span class="dot"></span>Sign out</button>
+      </div>
+    </aside>
+
+    <div class="app-content">
+
+      <!-- DASHBOARD -->
+      <div class="app-page active" id="page-dashboard">
+        <div class="app-page-head">
+          <div><h2>Dashboard</h2><p>Overview of your security posture</p></div>
+          <span class="badge-demo">Static demo data</span>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="num">18</div><div class="label">Total assets</div></div>
+          <div class="kpi-card"><div class="num signal">14</div><div class="label">Authorized for scanning</div></div>
+          <div class="kpi-card"><div class="num risk">7</div><div class="label">Open findings</div></div>
+          <div class="kpi-card"><div class="num amber">2</div><div class="label">Active engagements</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Open findings by severity</h3></div>
+          <div class="risk-bars">
+            <div class="risk-row"><span>Critical</span><div class="risk-track"><div class="risk-fill" style="width:12%; background:var(--risk);"></div></div><span>1</span></div>
+            <div class="risk-row"><span>High</span><div class="risk-track"><div class="risk-fill" style="width:28%; background:var(--risk);"></div></div><span>2</span></div>
+            <div class="risk-row"><span>Medium</span><div class="risk-track"><div class="risk-fill" style="width:45%; background:var(--amber);"></div></div><span>3</span></div>
+            <div class="risk-row"><span>Low</span><div class="risk-track"><div class="risk-fill" style="width:16%; background:var(--signal);"></div></div><span>1</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Recent activity</h3></div>
+          <table>
+            <thead><tr><th>Event</th><th>Asset</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>
+              <tr><td>External network scan</td><td>vpn.acme.co</td><td><span class="pill ok">Completed</span></td><td>Aug 12, 2026</td></tr>
+              <tr><td>Web app pentest</td><td>checkout.acme.co</td><td><span class="pill warn">In progress</span></td><td>Aug 10, 2026</td></tr>
+              <tr><td>Scan requested</td><td>staging.acme.co</td><td><span class="pill bad">Blocked — unauthorized</span></td><td>Aug 9, 2026</td></tr>
+              <tr><td>Phishing simulation</td><td>All staff — Wave 2</td><td><span class="pill muted">Scheduled</span></td><td>Aug 20, 2026</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ASSETS -->
+      <div class="app-page" id="page-assets">
+        <div class="app-page-head">
+          <div><h2>Assets</h2><p>Register and authorize the targets in scope</p></div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('assetModal')">+ Register asset</button>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div class="toolbar"><input placeholder="Search assets..." disabled><select disabled><option>All types</option></select></div>
+            <span class="badge-demo">Static demo data</span>
+          </div>
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th>Identifier</th><th>Status</th><th>Scope expires</th></tr></thead>
+            <tbody>
+              <tr><td>Primary corporate VPN</td><td>Server</td><td>vpn.acme.co</td><td><span class="pill ok">Authorized</span></td><td>Sep 30, 2026</td></tr>
+              <tr><td>Checkout service</td><td>Web app</td><td>checkout.acme.co</td><td><span class="pill ok">Authorized</span></td><td>Sep 15, 2026</td></tr>
+              <tr><td>Staging environment</td><td>Server</td><td>staging.acme.co</td><td><span class="pill bad">Unauthorized</span></td><td>—</td></tr>
+              <tr><td>Public API gateway</td><td>API</td><td>api.acme.co</td><td><span class="pill ok">Authorized</span></td><td>Oct 1, 2026</td></tr>
+              <tr><td>Office Wi-Fi</td><td>Network</td><td>ACME-CORP-5G</td><td><span class="pill warn">Pending review</span></td><td>—</td></tr>
+              <tr><td>iOS banking app</td><td>Mobile app</td><td>com.acme.mobile</td><td><span class="pill ok">Authorized</span></td><td>Nov 1, 2026</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SCANS -->
+      <div class="app-page" id="page-scans">
+        <div class="app-page-head">
+          <div><h2>Scans</h2><p>Scan history and status for authorized assets</p></div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('scanModal')">+ Request scan</button>
+        </div>
+        <div class="panel">
+          <table>
+            <thead><tr><th>Scan</th><th>Asset</th><th>Type</th><th>Status</th><th>Requested</th></tr></thead>
+            <tbody>
+              <tr><td>#SC-1042</td><td>vpn.acme.co</td><td>Network — basic</td><td><span class="pill ok">Completed</span></td><td>Aug 12, 2026</td></tr>
+              <tr><td>#SC-1041</td><td>checkout.acme.co</td><td>Web app</td><td><span class="pill warn">Running</span></td><td>Aug 10, 2026</td></tr>
+              <tr><td>#SC-1040</td><td>staging.acme.co</td><td>Network — basic</td><td><span class="pill bad">Blocked — unauthorized</span></td><td>Aug 9, 2026</td></tr>
+              <tr><td>#SC-1039</td><td>api.acme.co</td><td>API</td><td><span class="pill ok">Completed</span></td><td>Aug 3, 2026</td></tr>
+              <tr><td>#SC-1038</td><td>ACME-CORP-5G</td><td>Wireless</td><td><span class="pill muted">Queued</span></td><td>Aug 1, 2026</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FINDINGS -->
+      <div class="app-page" id="page-findings">
+        <div class="app-page-head">
+          <div><h2>Findings</h2><p>Vulnerabilities identified across your assets</p></div>
+          <span class="badge-demo">Static demo data</span>
+        </div>
+        <div class="panel">
+          <table>
+            <thead><tr><th>Finding</th><th>Asset</th><th>Severity</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Outdated TLS configuration</td><td>vpn.acme.co</td><td><span class="pill bad">Critical</span></td><td><span class="pill warn">In progress</span></td></tr>
+              <tr><td>Broken access control on order API</td><td>checkout.acme.co</td><td><span class="pill bad">High</span></td><td><span class="pill muted">Open</span></td></tr>
+              <tr><td>Verbose error messages exposing stack traces</td><td>api.acme.co</td><td><span class="pill warn">Medium</span></td><td><span class="pill muted">Open</span></td></tr>
+              <tr><td>Missing rate limiting on login endpoint</td><td>checkout.acme.co</td><td><span class="pill warn">Medium</span></td><td><span class="pill ok">Resolved</span></td></tr>
+              <tr><td>Self-signed certificate on internal panel</td><td>staging.acme.co</td><td><span class="pill ok">Low</span></td><td><span class="pill muted">Open</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="app-page" id="page-reports">
+        <div class="app-page-head">
+          <div><h2>Reports</h2><p>Executive and technical reports from completed engagements</p></div>
+          <span class="badge-demo">Static demo data</span>
+        </div>
+        <div class="report-grid">
+          <div class="report-card"><div><h4>External Network Pentest — Q3</h4><div class="meta">Technical · Generated Aug 12, 2026</div></div><button class="btn btn-ghost btn-sm" disabled>Download</button></div>
+          <div class="report-card"><div><h4>Executive Summary — Q3 Engagements</h4><div class="meta">Executive · Generated Aug 12, 2026</div></div><button class="btn btn-ghost btn-sm" disabled>Download</button></div>
+          <div class="report-card"><div><h4>Web App Pentest — Checkout Service</h4><div class="meta">Technical · Generated Jul 28, 2026</div></div><button class="btn btn-ghost btn-sm" disabled>Download</button></div>
+          <div class="report-card"><div><h4>Phishing Simulation — Wave 1 Results</h4><div class="meta">Awareness · Generated Jul 15, 2026</div></div><button class="btn btn-ghost btn-sm" disabled>Download</button></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="app-page" id="page-settings">
+        <div class="app-page-head"><div><h2>Settings</h2><p>Account and organization preferences</p></div></div>
+        <div class="panel">
+          <div class="panel-head"><h3>Profile</h3></div>
+          <div style="padding:20px;">
+            <div class="field-row">
+              <div class="field"><label>Full name</label><input value="Jordan Micah" disabled></div>
+              <div class="field"><label>Email</label><input value="jordan@acme.co" disabled></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Organization</label><input value="Acme Co" disabled></div>
+              <div class="field"><label>Role</label><input value="Client" disabled></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODALS (visual only) -->
+<div class="modal-overlay" id="assetModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Register asset</h3><button class="modal-close" onclick="closeModal('assetModal')">×</button></div>
+    <div class="field"><label>Asset name</label><input placeholder="e.g. Marketing website"></div>
+    <div class="field"><label>Type</label><select><option>Website</option><option>API</option><option>Server</option><option>Network</option><option>Cloud resource</option><option>Mobile application</option></select></div>
+    <div class="field"><label>Identifier</label><input placeholder="Domain, IP, or URL"></div>
+    <div class="field"><label>Scope notes</label><textarea placeholder="What's in / out of scope"></textarea></div>
+    <button class="btn btn-primary" style="width:100%;" onclick="closeModal('assetModal')">Save asset (demo — not connected)</button>
+  </div>
+</div>
+<div class="modal-overlay" id="scanModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Request scan</h3><button class="modal-close" onclick="closeModal('scanModal')">×</button></div>
+    <div class="field"><label>Asset</label><select><option>vpn.acme.co</option><option>checkout.acme.co</option><option>api.acme.co</option></select></div>
+    <div class="field"><label>Scan type</label><select><option>Network — basic</option><option>Web application</option><option>API</option></select></div>
+    <button class="btn btn-primary" style="width:100%;" onclick="closeModal('scanModal')">Request scan (demo — not connected)</button>
+  </div>
+</div>
+
+<footer id="publicFooter">
+  <div class="wrap foot-row">
+    <div class="brand"><div class="brand-mark"></div>VANTAGE POINT</div>
+    <div class="fine">© 2026 Vantage Point Security. All testing performed under signed authorization only.</div>
+  </div>
+</footer>
+
+<script>
+  // ---------- PUBLIC NAV ----------
+  function goPublic(target){
+    document.querySelectorAll('#publicSite .view').forEach(s => s.classList.toggle('active', s.id === target));
+    document.querySelectorAll('#publicNav button').forEach(b => b.classList.toggle('active', b.dataset.target === target));
+    setSiteMode('public');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  document.querySelectorAll('#publicNav [data-target]').forEach(b => b.addEventListener('click', () => goPublic(b.dataset.target)));
+
+  function setSiteMode(mode){
+    document.getElementById('publicSite').style.display = mode === 'public' ? '' : 'none';
+    document.getElementById('loginSite').style.display = mode === 'login' ? '' : 'none';
+    document.getElementById('publicFooter').style.display = mode === 'app' ? 'none' : '';
+    document.getElementById('appShell').classList.toggle('active', mode === 'app');
+    document.querySelector('header nav').style.display = mode === 'app' ? 'none' : 'flex';
+  }
+
+  function mockLogin(){ setSiteMode('login'); window.scrollTo({top:0}); }
+
+  document.getElementById('loginForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('lemail').value;
+    if(email) document.getElementById('appUserName').textContent = email.split('@')[0];
+    setSiteMode('app');
+    window.scrollTo({top:0});
+  });
+
+  function mockLogout(){ setSiteMode('public'); goPublic('home'); }
+
+  // ---------- APP SIDEBAR NAV ----------
+  document.querySelectorAll('#appNav [data-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#appNav button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.app-page').forEach(p => p.classList.toggle('active', p.id === 'page-' + btn.dataset.page));
+      document.querySelector('.app-content').scrollTo({top:0});
+    });
+  });
+
+  // ---------- MODALS ----------
+  function openModal(id){ document.getElementById(id).classList.add('show'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+  // ---------- HERO SCAN GRID ----------
+  const cellGrid = document.getElementById('cellGrid');
+  for(let i=0;i<60;i++){ const c = document.createElement('div'); c.className = 'cell'; cellGrid.appendChild(c); }
+  const cells = document.querySelectorAll('.cell');
+  function animateCells(){
+    cells.forEach(c => {
+      const r = Math.random();
+      if(r < 0.08){ c.style.background = 'rgba(232,96,76,0.35)'; c.style.borderColor='rgba(232,96,76,0.5)'; }
+      else if(r < 0.4){ c.style.background = 'rgba(95,217,196,0.28)'; c.style.borderColor='rgba(95,217,196,0.4)'; }
+      else { c.style.background=''; c.style.borderColor=''; }
+    });
+  }
+  setInterval(animateCells, 1400); animateCells();
+
+  // ---------- AWARENESS CONTENT ----------
+  const awarenessTopics = [
+    {tag:'Email', title:'Spotting phishing attempts', short:"Unexpected urgency, mismatched sender domains, and links that don't match their display text are the top tells.", more:"Before clicking a link, hover to preview the real destination. Verify unusual requests through a second channel like a phone call, and report suspicious emails rather than just deleting them."},
+    {tag:'Access', title:'Password & MFA hygiene', short:'A unique password per account plus MFA blocks the vast majority of account-takeover attempts.', more:"Use a password manager so uniqueness is never a burden, and prefer app-based or hardware MFA over SMS. Never approve an MFA push you didn't initiate."},
+    {tag:'People', title:'Social engineering red flags', short:'Attackers exploit urgency, authority, and helpfulness — the same instincts that make good coworkers.', more:'Be cautious of unsolicited calls or messages claiming to be IT, HR, or an executive asking for credentials or urgent payments. Verify identity through a known channel first.'},
+    {tag:'Incidents', title:'Reporting quickly matters', short:'The gap between "something feels off" and "I reported it" is often the difference between a near-miss and a breach.', more:"Report suspected incidents immediately, even if unsure. Don't try to fix it yourself first — that can destroy evidence responders need."},
+    {tag:'Remote work', title:'Securing your home setup', short:"Your home network and personal devices are now part of the company's attack surface.", more:'Keep router firmware updated, use a strong unique Wi-Fi password, and avoid accessing company systems from shared devices.'},
+    {tag:'Data', title:'Handling sensitive data', short:"Data doesn't need to be hacked to leak — misdirected emails and open sharing links cause just as much damage.", more:'Double-check recipients before sending sensitive files, and use company-approved storage rather than personal cloud accounts.'}
+  ];
+  const awareGrid = document.getElementById('awareGrid');
+  awarenessTopics.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'aware-card';
+    card.innerHTML = `<span class="tag">${t.tag}</span><h3>${t.title}</h3><p class="short">${t.short}</p><span class="toggle">+ Read more</span><div class="more">${t.more}</div>`;
+    card.addEventListener('click', () => {
+      card.classList.toggle('open');
+      card.querySelector('.toggle').textContent = card.classList.contains('open') ? '– Show less' : '+ Read more';
+    });
+    awareGrid.appendChild(card);
+  });
+
+  // ---------- SERVICES CONTENT ----------
+  const services = [
+    {code:'EXT-NET', name:'External Network Penetration Test', desc:'Simulated attack against your internet-facing infrastructure.', duration:'1–2 weeks', deliverable:'Report + debrief call'},
+    {code:'INT-NET', name:'Internal Network Penetration Test', desc:'Assumes a foothold inside your network and tests how far an attacker could move.', duration:'1–2 weeks', deliverable:'Report + attack-path map'},
+    {code:'WEB-APP', name:'Web Application Penetration Test', desc:'Manual and automated testing against OWASP-aligned risks.', duration:'1–3 weeks', deliverable:'Report + retest window'},
+    {code:'CLOUD', name:'Cloud Security Assessment', desc:'Configuration review and exploitation testing across AWS, Azure, or GCP.', duration:'1–2 weeks', deliverable:'Report + hardening checklist'},
+    {code:'WIRELESS', name:'Wireless Penetration Test', desc:'On-site assessment of your Wi-Fi infrastructure.', duration:'2–4 days', deliverable:'Report'},
+    {code:'PHISH-SIM', name:'Social Engineering / Phishing Simulation', desc:'Realistic phishing campaigns to measure employee response.', duration:'2–4 weeks', deliverable:'Report + awareness metrics'},
+    {code:'RED-TEAM', name:'Red Team Engagement', desc:'A goal-oriented simulation of a real adversary.', duration:'4–8 weeks', deliverable:'Report + purple-team debrief'},
+    {code:'MOBILE', name:'Mobile Application Penetration Test', desc:'Static and dynamic testing of iOS/Android apps.', duration:'1–3 weeks', deliverable:'Report + retest window'}
+  ];
+  const svcGrid = document.getElementById('svcGrid');
+  const fservice = document.getElementById('fservice');
+  services.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'svc-card';
+    card.innerHTML = `<div class="svc-top"><h3>${s.name}</h3><span class="svc-code">${s.code}</span></div><p>${s.desc}</p><div class="svc-meta"><span>Duration <b>${s.duration}</b></span><span>Deliverable <b>${s.deliverable}</b></span></div><button class="btn btn-ghost apply-for" data-name="${s.name}">Apply for this service</button>`;
+    svcGrid.appendChild(card);
+    const opt = document.createElement('option'); opt.textContent = s.name; fservice.appendChild(opt);
+  });
+  document.addEventListener('click', (e) => {
+    if(e.target.classList.contains('apply-for')){ fservice.value = e.target.dataset.name; goPublic('apply'); }
+  });
+
+  // ---------- APPLY FORM ----------
+  document.getElementById('applyForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    document.getElementById('successBox').classList.add('show');
+    e.target.reset();
+  });
+</script>
+
+</body>
+</html>
